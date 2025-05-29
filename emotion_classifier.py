@@ -16,7 +16,7 @@ print(f"Treniņa dati: {len(train_df)} ieraksti")
 print(f"Validācijas dati: {len(dev_df)} ieraksti")
 print(f"Testa dati: {len(test_df)} ieraksti")
 
-# 1.1. Iztīrīt tukšos tekstus
+# 1.1. Iztīram tukšos tekstus
 print("\nTīrām tukšos tekstus...")
 train_df = train_df.dropna(subset=['text'])  # Noņemt rindas ar tukšiem tekstiem
 train_df['text'] = train_df['text'].fillna('')  # Aizpildīt atlikušos tukšumus ar tukšu virkni
@@ -51,8 +51,6 @@ classifier = MultinomialNB()
 classifier.fit(X_train, y_train)
 print("Modelis veiksmīgi apmācīts!")
 
-# ... (tālākā koda daļa paliek nemainīga) ...
-
 # 4. Validācija uz attīstības datiem
 print("\nNovērtējam uz validācijas datiem...")
 y_dev_pred = classifier.predict(X_dev)
@@ -81,7 +79,7 @@ plt.xlabel('Emocijas')
 plt.ylabel('Prognožu skaits')
 plt.xticks(rotation=45)
 
-# Pievienot skaitļus virs kolonnām
+# Pievienojam skaitļus virs kolonnām
 for bar in bars:
     height = bar.get_height()
     plt.text(bar.get_x() + bar.get_width()/2., height,
@@ -108,7 +106,7 @@ for emotion in emotions:
     for word, score in top_words:
         print(f"  {word}: {score:.4f}")
 
-# 9. Saglabā rezultātus
+# 9. Saglabājam rezultātus
 results_df = test_df.copy()
 results_df['predicted_emotion'] = y_test_pred
 results_df['is_correct'] = results_df['emotion'] == results_df['predicted_emotion']

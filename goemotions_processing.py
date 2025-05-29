@@ -10,9 +10,9 @@ from collections import Counter
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-import requests  # Importējam, lai varētu lejupielādēt failus
+import requests 
 
-# Lejupielādēt nepieciešamos NLTK resursus
+# Lejupielādējam nepieciešamos NLTK resursus
 nltk.download('punkt', quiet=True)
 nltk.download('wordnet', quiet=True)
 
@@ -26,7 +26,7 @@ def download_file(url, filename):
         print(f"Fails {filename} jau eksistē.")
         return
     
-    # Izveidot direktoriju, ja tāda nav
+    # Izveidojam direktoriju, ja tāda nav
     os.makedirs(os.path.dirname(filename), exist_ok=True)
     
     try:
@@ -40,7 +40,7 @@ def download_file(url, filename):
         print(f"Kļūda lejupielādējot {filename}: {e}")
         raise
 
-# Lejupielādēt nepieciešamos failus
+# Lejupielādējam nepieciešamos failus
 base_url = "https://raw.githubusercontent.com/google-research/google-research/master/goemotions/data/"
 
 files_to_download = {
@@ -58,21 +58,21 @@ for local_path, url in files_to_download.items():
 # 1. Datu ielāde un kartēšanas sagatavošana
 # ========================================
 
-# Ielādēt emociju nosaukumus
+# Ielādējam emociju nosaukumus
 with open('data/emotions.txt', 'r') as f:
     emotions = [line.strip() for line in f]
 
-# Ielādēt Ekman kartēšanu
+# Ielādēja Ekman kartēšanu
 with open('data/ekman_mapping.json') as f:
     ekman_mapping = json.load(f)
 
-# Izveidot apgriezto kartēšanu: emocija -> Ekman kategorija
+# Izveidojam apgriezto kartēšanu: emocija -> Ekman kategorija
 reverse_ekman_mapping = {}
 for ekman_category, emotion_list in ekman_mapping.items():
     for emotion in emotion_list:
         reverse_ekman_mapping[emotion] = ekman_category
 
-# Izveidot kartēšanu no emocijas ID uz Ekman kategoriju
+# Izveidojam kartēšanu no emocijas ID uz Ekman kategoriju
 id_to_ekman = {}
 for idx, emotion_name in enumerate(emotions):
     if emotion_name in reverse_ekman_mapping:
@@ -95,18 +95,18 @@ def clean_text(text):
     if not isinstance(text, str):
         return ""
     
-    # Noņemt URL, lietotājvārdus, hashtagus
+    # Noņemam URL, lietotājvārdus, hashtagus
     text = re.sub(r'http\S+', '', text)
     text = re.sub(r'@\w+', '', text)
     text = re.sub(r'#\w+', '', text)
     
-    # Noņemt skaitļus
+    # Noņemam skaitļus
     text = re.sub(r'\d+', '', text)
     
-    # Aizstāt speciālās rakstzīmes ar atstarpēm
+    # Aizstājam speciālās rakstzīmes ar atstarpēm
     text = re.sub(r'[^\w\s]', ' ', text)
     
-    # Aizstāt vairākus atstarpju rakstzīmes ar vienu atstarpi
+    # Aizstājam vairākus atstarpju rakstzīmes ar vienu atstarpi
     text = re.sub(r'\s+', ' ', text)
     
     return text.strip().lower()
@@ -142,28 +142,28 @@ def process_emotion_file(input_path, output_path):
     """
     print(f"\nApstrādājam: {input_path}")
     
-    # Ielādēt datus (tikai pirmās divas kolonnas)
+    # Ielādējam datus (tikai pirmās divas kolonnas)
     df = pd.read_csv(input_path, sep='\t', header=None, usecols=[0, 1])
     df.columns = ['text', 'emotion_ids']
     print(f"  Ielādēti {len(df)} ieraksti")
     
-    # Konvertēt emociju ID (no "0,1" uz [0,1])
+    # Konvertējam emociju ID (no "0,1" uz [0,1])
     df['emotion_ids'] = df['emotion_ids'].apply(
         lambda x: [int(i) for i in str(x).split(',')] if pd.notnull(x) else [])
     
-    # Filtrēt ierakstus ar tieši vienu emociju
+    # Filtrējam ierakstus ar tieši vienu emociju
     single_emotion_df = df[df['emotion_ids'].apply(len) == 1]
     print(f"  Ieraksti ar vienu emociju: {len(single_emotion_df)}")
     
-    # Pārveidot uz Ekman kategorijām
+    # Pārveidojam uz Ekman kategorijām
     single_emotion_df['ekman_emotion'] = single_emotion_df['emotion_ids'].apply(
         lambda ids: id_to_ekman.get(ids[0], "neutral") if ids else "neutral")
     
-    # Pievienot priekšapstrādātu tekstu
+    # Pievienojam priekšapstrādātu tekstu
     print("  Veicam teksta priekšapstrādi...")
     single_emotion_df['processed_text'] = single_emotion_df['text'].apply(preprocess_text)
     
-    # Saglabāt jauno failu
+    # Saglabājam jauno failu
     single_emotion_df[['processed_text', 'ekman_emotion']].to_csv(
         output_path, sep='\t', index=False, header=False
     )
@@ -171,7 +171,7 @@ def process_emotion_file(input_path, output_path):
     
     return single_emotion_df
 
-# Apstrādāt visus datu kopas failus
+# Apstrādājam visus datu kopas failus
 train_df = process_emotion_file('data/train.tsv', 'train_ekman.tsv')
 dev_df = process_emotion_file('data/dev.tsv', 'dev_ekman.tsv')
 test_df = process_emotion_file('data/test.tsv', 'test_ekman.tsv')
@@ -182,21 +182,21 @@ test_df = process_emotion_file('data/test.tsv', 'test_ekman.tsv')
 
 print("\nVeidojam tokenu biežumsarakstu...")
 
-# Apvienot visus apstrādātos tekstus
+# Apvienojam visus apstrādātos tekstus
 all_text = pd.concat([
     train_df['processed_text'], 
     dev_df['processed_text'], 
     test_df['processed_text']
 ]).tolist()
 
-# Tokenizēt un saskaitīt tokenus
+# Tokenizējam un saskaitīt tokenus
 all_tokens = []
 for text in all_text:
     if text:  # Izvairīties no tukšiem tekstiem
         tokens = word_tokenize(text)
         all_tokens.extend(tokens)
 
-# Izveidot biežuma vārdnīcu
+# Izveidojam biežuma vārdnīcu
 token_freq = Counter(all_tokens)
 print("\nBiežākās 10 tekstvienības pirms apcirpšanas:")
 print(token_freq.most_common(10))
@@ -221,12 +221,12 @@ def plot_emotion_distribution(df, title):
     plt.savefig(f"{title.replace(' ', '_')}.png")
     print(f"Saglabāts grafiks: {title.replace(' ', '_')}.png")
 
-# Vizualizēt emociju sadalījumu
+# Vizualizējam emociju sadalījumu
 plot_emotion_distribution(train_df, 'Emociju sadalījums treniņa datos')
 plot_emotion_distribution(dev_df, 'Emociju sadalījums validācijas datos')
 plot_emotion_distribution(test_df, 'Emociju sadalījums testa datos')
 
-# Aprēķināt tokenu statistiku
+# Aprēķinām tokenu statistiku
 print(f"\nKopējais tokenu skaits: {len(all_tokens)}")
 print(f"Unikālo tokenu skaits: {len(token_freq)}")
 avg_length = np.mean([len(word_tokenize(t)) for t in all_text if t])
@@ -249,7 +249,7 @@ print(f"Unikālo tokenu skaits pēc apcirpšanas: {len(filtered_freq)}")
 print("Biežākās 10 tekstvienības pēc apcirpšanas:")
 print(filtered_freq.most_common(10))
 
-# Saglabāt apgriezto vārdnīcu
+# Saglabājam apgriezto vārdnīcu
 with open('filtered_vocab.txt', 'w') as f:
     for word, count in filtered_freq.most_common():
         f.write(f"{word}\t{count}\n")
